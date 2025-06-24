@@ -3,24 +3,25 @@ let separacion = 12;
 
 function setup() {
   createCanvas(windowWidth, windowHeight);
-  pixelDensity(1);
-  initCesped();
-}
-
-function windowResized() {
-  resizeCanvas(windowWidth, windowHeight);
-  initCesped();
+  pixelDensity(1); // evita sobrecarga en móviles
+  crearCesped();
 }
 
 function draw() {
   dibujarFondo();
-  for (let b of cesped) {
-    b.mover(mouseX, mouseY);
-    b.dibujar();
+
+  for (let i = 0; i < cesped.length; i++) {
+    cesped[i].mover(mouseX, mouseY);
+    cesped[i].dibujar();
   }
 }
 
-function initCesped() {
+function windowResized() {
+  resizeCanvas(windowWidth, windowHeight);
+  crearCesped();
+}
+
+function crearCesped() {
   cesped = [];
   for (let x = 0; x < width; x += separacion) {
     for (let y = height * 0.5; y < height; y += separacion) {
@@ -30,9 +31,9 @@ function initCesped() {
 }
 
 function dibujarFondo() {
-  noFill();
+  noStroke();
   for (let y = 0; y < height; y++) {
-    let c = lerpColor(color(210,245,210), color(170,220,170), y/height);
+    let c = lerpColor(color(192, 235, 192), color(162, 210, 162), y / height);
     stroke(c);
     line(0, y, width, y);
   }
@@ -40,33 +41,39 @@ function dibujarFondo() {
 
 class Brizna {
   constructor(x, y) {
-    this.x = x; this.y = y;
-    this.altura = random(20, 40);
-    this.fase = random(TWO_PI);
-    this.vel = random(0.008, 0.02);
-    this.curva = random(0.8, 1.4);
-    this.t = random(1000);
-    let v = random(100,180);
-    this.color = color(40, v, 70, 200);
+    this.x = x;
+    this.y = y;
+    this.altura = random(20, 42);
+    this.inclinacion = 0;
+    this.angulo = random(TWO_PI);
+    let tonoVerde = random(100, 180);
+    this.color = color(40, tonoVerde, 70, 180);
   }
 
   mover(mx, my) {
-    this.t += this.vel;
-    this.osc = sin(this.t + this.fase) * this.curva;
-    if (dist(this.x, this.y, mx, my) < 100) {
-      this.osc += map(dist(this.x, this.y, mx, my), 0, 100, 2, 0);
-    }
+    this.angulo += 0.02;
+    let viento = sin(this.angulo) * 1.3;
+
+    let d = dist(this.x, this.y, mx, my);
+    let efecto = (d < 140) ? map(d, 0, 140, 4, 0) : 0;
+
+    this.inclinacion = viento + efecto;
   }
 
   dibujar() {
     stroke(this.color);
-    strokeWeight(1);
+    strokeWeight(1.1);
     noFill();
 
-    let x1=this.x, y1=this.y;
-    let x2=x1 + this.osc*0.5, y2=y1 - this.altura*0.3;
-    let x3=x1 + this.osc*0.8, y3=y1 - this.altura*0.7;
-    let x4=x1 + this.osc, y4=y1 - this.altura;
-    bezier(x1,y1,x2,y2,x3,y3,x4,y4);
+    let x1 = this.x;
+    let y1 = this.y;
+    let x2 = x1 + this.inclinacion * 0.3;
+    let y2 = y1 - this.altura * 0.3;
+    let x3 = x1 + this.inclinacion * 0.7;
+    let y3 = y1 - this.altura * 0.7;
+    let x4 = x1 + this.inclinacion;
+    let y4 = y1 - this.altura;
+
+    bezier(x1, y1, x2, y2, x3, y3, x4, y4);
   }
 }
